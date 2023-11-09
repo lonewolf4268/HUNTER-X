@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    tools:context="com.mrincredible.hunterx.MainActivity">
+
+    <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+        android:id="@+id/cvTitleBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/about"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="5dp"
+                android:backgroundTint="@color/blue"
+                android:onClick="about"
+                android:text="@string/about"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_about"
+                app:iconTint="@color/white" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="@string/app_name"
+                android:textColor="@color/blue"
+                android:textSize="25sp"
+                android:textStyle="italic|bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btLog"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="5dp"
+                android:backgroundTint="@color/blue"
+                android:onClick="log"
+                android:text="@string/log"
+                android:textColor="@color/white"
+                app:icon="@drawable/ic_log"
+                app:iconTint="@color/white" />
+
+        </RelativeLayout>
+
+
+    </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/logo"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_below="@id/cvTitleBar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="20dp"
+        android:background="@drawable/logobackground"
+        android:src="@drawable/logo" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/mbtgSelectionGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/logo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        app:checkedButton="@id/btManual"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btManual"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="manual"
+            android:text="Manual"
+            android:textColor="@color/blue" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btAuto"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="auto"
+            android:text="Auto"
+            android:textColor="@color/blue" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <RelativeLayout
+        android:id="@+id/hostANDproxy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/mbtgSelectionGroup">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilhost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:hint="@string/host"
+            app:counterEnabled="true"
+            app:counterMaxLength="20"
+            app:endIconMode="clear_text"
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/blue"
+            app:prefixText="@string/prifixhost"
+            app:suffixTextColor="@color/blue">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tiehost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textNoSuggestions"
+                android:maxLength="21"
+                android:textColor="@color/blue" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilproxy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tilhost"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:hint="@string/proxy"
+            app:counterEnabled="true"
+            app:counterMaxLength="15"
+            app:endIconMode="clear_text"
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/blue"
+            app:prefixText="@string/prifixproxy"
+            app:suffixTextColor="@color/blue">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tieproxy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textNoSuggestions"
+                android:maxLength="16" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilproxyfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tilproxy"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:hint="@string/proxyfile"
+            android:visibility="gone"
+            app:counterEnabled="true"
+            app:counterMaxLength="20"
+            app:endIconMode="custom"
+            app:endIconDrawable="@drawable/ic_choosefile"
+            app:errorEnabled="true"
+            app:errorIconTint="@color/orange"
+            app:errorTextColor="@color/orange"
+            app:helperTextEnabled="true"
+            app:helperTextTextColor="@color/blue"
+            app:prefixText="@string/prifixfile"
+            app:suffixTextColor="@color/blue">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/tieproxyfile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textNoSuggestions" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+    </RelativeLayout>
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/cproxyfilemode"
+        style="@style/Widget.Material3.Chip.Filter"
+        android:layout_width="144dp"
+        android:layout_height="48dp"
+        android:layout_below="@id/hostANDproxy"
+        android:layout_marginTop="30dp"
+        android:text="@string/proxyfilemode"
+        android:textColor="@color/blue" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/cusemanualproxy"
+        style="@style/Widget.Material3.Chip.Filter"
+        android:layout_width="150dp"
+        android:layout_height="48dp"
+        android:layout_below="@id/hostANDproxy"
+        android:layout_marginLeft="50px"
+        android:layout_marginTop="30dp"
+        android:layout_toEndOf="@+id/cproxyfilemode"
+        android:checked="true"
+        android:text="@string/useproxy"
+        android:textColor="@color/blue" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabconnect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom|end"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/orange"
+        android:onClick="start"
+        app:srcCompat="@drawable/ic_connect"
+        tools:ignore="SpeakableTextPresentCheck" />
+
+</RelativeLayout>
