@@ -143,7 +143,7 @@
             android:layout_marginTop="5dp"
             android:hint="@string/proxy"
             app:counterEnabled="true"
-            app:counterMaxLength="15"
+            app:counterMaxLength="20"
             app:endIconMode="clear_text"
             app:errorEnabled="true"
             app:errorIconTint="@color/orange"
@@ -158,7 +158,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textNoSuggestions"
-                android:maxLength="16" />
+                android:maxLength="21" />
 
         </com.google.android.material.textfield.TextInputLayout>
 

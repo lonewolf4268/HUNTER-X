@@ -7,14 +7,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +26,10 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Random;
 
 public class LogActivity extends AppCompatActivity {
@@ -43,18 +45,22 @@ public class LogActivity extends AppCompatActivity {
     int mport; //for manual port only
     boolean useProxy;
     boolean useManualProxy;
-    String tmpfile = connectionDetails.getTmpfile();
     String tempResult = connectionDetails.getTempResult();
+    int endCount = 0;
+    PowerManager powerManager;
+    PowerManager.WakeLock wakeLock;
     private TextView tvlogResult;
     private HttpURLConnection httpURLConnection = null;
     private URL url;
     private int connectionType;
     private String filename;
     private boolean startconnection;
-    private boolean isRunning = false;
+    private boolean running = false;
     private boolean createconnection = false;
     private Handler handler;
     private String host;
+    private boolean tryingToStop = false;
+    Looper looper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +97,7 @@ public class LogActivity extends AppCompatActivity {
             default:
         }
 
+
         if (startconnection) {
             switchConnection();
         }
@@ -105,16 +112,20 @@ public class LogActivity extends AppCompatActivity {
 
     public void clear(View v) {
 //        clearTempResult(tempResult);
-        deleteTempFile(connectionDetails.getTempResult());
-        tvlogResult.setText("");
+
+        LogActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                if (clearit()) {
+                    response = new StringBuilder();
+                    tvlogResult.setText("");
+                    Toast.makeText(LogActivity.this, "Log Cleared", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
-    public void stop(View v) {
-        Toast.makeText(LogActivity.this, "connection stopped", Toast.LENGTH_SHORT).show();
-        isRunning = false;
-        startconnection = false;
-        createconnection = false;
-        finish();
+    public boolean clearit() {
+        return deleteTempFile(connectionDetails.getTempResult());
     }
 
     private void switchConnection() {
@@ -139,7 +150,7 @@ public class LogActivity extends AppCompatActivity {
                 automode();
                 return;
             default:
-                Toast.makeText(this, "mode not selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Unknown connection type", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -173,12 +184,12 @@ public class LogActivity extends AppCompatActivity {
     }
 
     private void automode() {
-//        createFile(tmpfile);
+        looper = Looper.myLooper();
         // Initialize the handler on the main (UI) thread
-        handler = new Handler(Looper.getMainLooper());
+        handler = new Handler(looper);
 
         // Start the asynchronous while loop
-        isRunning = true;
+        running = true;
         startAsyncWhileLoop();
     }
 
@@ -190,7 +201,7 @@ public class LogActivity extends AppCompatActivity {
                 if (useProxy) {
                     proxxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(tproxy, tport));
                     httpURLConnection = (HttpURLConnection) url.openConnection(proxxy);
-                    response.append("Proxy: " + tproxy + "\n" + "Port: " + tport);
+                    response.append("Proxy: " + tproxy + "\n" + "Port: " + tport + "\n");
                 } else {
                     httpURLConnection = (HttpURLConnection) url.openConnection();
                 }
@@ -205,7 +216,7 @@ public class LogActivity extends AppCompatActivity {
                 response.append("Using proxy: " + httpURLConnection.usingProxy() + "\n");
 
                 if ((httpURLConnection.getResponseCode() == 101) || (httpURLConnection.getResponseCode() == 200)) {
-                    responseToWrite.append("Proxy: " + tproxy + ":" + tport + " connected to " + host + " successfully");
+                    responseToWrite.append("Proxy: " + tproxy + ":" + tport + " connected to " + host + " successfully\n");
                     httpURLConnection.getHeaderFields().forEach((key, value) -> {
                         if (key == null) {
                             key = "Response";
@@ -213,6 +224,7 @@ public class LogActivity extends AppCompatActivity {
                         response.append(key + ":" + value + "\n");
                         responseToWrite.append(key + ":" + value + "\n");
                     });
+                    responseToWrite.append("----------------END--------------\n\n");
                     //TODO ADD THE OK RESULT TO A FILE AND SHOW USERS THE LOCATION
                     //TODO FIX DARK THEME
                     //TODO ADD CONNECTION WITH SNI HOST
@@ -225,14 +237,26 @@ public class LogActivity extends AppCompatActivity {
                         response.append(key + ":" + value + "\n");
                     });
 //                    response.append(httpURLConnection.getErrorStream().toString());
-
-                    response.append("\n\n");
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
-                response.append(e + "\n\n");
+                response.append(e);
             } finally {
+                endCount++;
                 httpURLConnection.disconnect();
+            }
+
+            response.append("\n----------------END--------------\n\n");
+            responseToWrite.append("\n----------------END--------------\n\n");
+
+            writeToFileInternally(tempResult, response.toString());
+            writeToFileInternally(connectionDetails.getOkResults(), responseToWrite.toString());
+
+            if (endCount >= 10) {
+                clearit();
+                response = new StringBuilder();
+                endCount = 0;
             }
         });
 
@@ -244,21 +268,28 @@ public class LogActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        writeToFileInternally(tempResult, response.toString());
         tvlogResult.setText(response.toString());
     }
 
+    public boolean isRunning() {
+        return running;
+    }
+
     private void startAsyncWhileLoop() {
+
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
+        wakeLock.acquire();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 response.append("Host: " + host + "\n");
-                while (isRunning) {
+                while (isRunning()) {
 //                    writeToFile(tmpfile, proxyGenerator());
-
                     String tempProxy = proxyGenerator();
-                    writeToFileInternally(tmpfile, tempProxy);
+//                    writeToFileInternally(tmpfile, tempProxy);
+
 
                     try {
                         url = new URL("http://" + host);
@@ -272,6 +303,9 @@ public class LogActivity extends AppCompatActivity {
                         httpURLConnection.setReadTimeout(5000);
                         httpURLConnection.connect();
 
+                        response.append("Host: " + host + "\n");
+                        response.append("Proxy: " + tempProxy + "\n" + "Port: " + "80\n");
+
                         if ((httpURLConnection.getResponseCode() == 101) || (httpURLConnection.getResponseCode() == 200)) {
                             responseToWrite.append("Proxy: " + tempProxy + ":" + 80 + " connected to " + host + " successfully");
                             httpURLConnection.getHeaderFields().forEach((key, value) -> {
@@ -284,7 +318,6 @@ public class LogActivity extends AppCompatActivity {
 
                             response.append("\n----------------END--------------\n\n");
                             responseToWrite.append("\n----------------END--------------\n\n");
-
                             //TODO ADD THE OK RESULT TO A FILE AND SHOW USERS THE LOCATION
                         } else {
                             httpURLConnection.getHeaderFields().forEach((key, value) -> {
@@ -292,9 +325,7 @@ public class LogActivity extends AppCompatActivity {
                                     key = "Response";
                                 }
                                 response.append(key + ":" + value + "\n");
-                                responseToWrite.append(key + ":" + value + "\n");
                             });
-
                             response.append("\n----------------END--------------\n\n");
                         }
 
@@ -315,38 +346,74 @@ public class LogActivity extends AppCompatActivity {
                         public void run() {
                             // Update UI components or perform other UI-related actions
 //                            readFile(connectionDetails.getTempDir() + "/" + connectionDetails.getTmpfile());
-                            writeToFileInternally(tempResult, response.toString());
+                            endCount++;
                             tvlogResult.setText(response.toString());
+                            writeToFileInternally(tempResult, response.toString());
+                            writeToFileInternally(connectionDetails.getOkResults(), responseToWrite.toString());
+
+                            if (endCount >= 10) {
+                                clearit();
+                                response = new StringBuilder();
+                                endCount = 0;
+                            }
+
+                            if (tryingToStop){
+                                running = false;
+                                looper.quit();
+                            }
                         }
                     });
 
                     // Delay the loop for a specific interval (e.g., 1 second)
                     try {
-                        Thread.sleep(1000); // Adjust the delay interval as needed
+                        Thread.sleep(3000); // Adjust the delay interval as needed
                     } catch (InterruptedException e) {
+                        running = false;
                         e.printStackTrace();
+                        break;
                     }
+
+
                 }
+
+                wakeLock.release();
             }
+
         }).start();
     }
 
-    public void writeToFileInternally(String fileName, String text) {
-        FileOutputStream fileOutputStream = null;
+//    public boolean writeToFileInternally(String fileName, String text) {
+//        FileOutputStream fileOutputStream = null;
+//        try {
+//            fileOutputStream = openFileOutput(fileName, MODE_APPEND);
+//            fileOutputStream.write((text + "\n").getBytes());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            if (fileOutputStream != null) {
+//                try {
+//                    fileOutputStream.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//        return true;
+//    }
+
+    public boolean writeToFileInternally(String fileName, String text) {
+        File file = new File(getFilesDir() + "/" + filename);
+        Path path = Paths.get(getFilesDir().getPath());
         try {
-            fileOutputStream = openFileOutput(fileName, MODE_APPEND);
-            fileOutputStream.write((text + "\n").getBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (fileOutputStream != null) {
-                try {
-                    fileOutputStream.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            if (!fileExist(fileName)){
+                file.createNewFile();
             }
+
+            Files.write(path, text.getBytes(), StandardOpenOption.APPEND);
+        }catch (IOException e){
+            e.printStackTrace();
         }
+        return true;
     }
 
     public String readOldResponse(String filename) {
@@ -367,20 +434,64 @@ public class LogActivity extends AppCompatActivity {
         return "";
     }
 
-    public void deleteTempFile(String filename) {
+    public boolean deleteTempFile(String filename) {
         File file = new File(getFilesDir() + "/" + filename);
-        if (file.exists()) {
-            file.delete();
-            Toast.makeText(LogActivity.this, "Log Cleared", Toast.LENGTH_SHORT).show();
+        return file.delete();
+    }
+
+    public boolean fileExist(String filename) {
+        File file = new File(getFilesDir() + "/" + filename);
+        return file.exists();
+    }
+
+    public void okresult(View view) {
+        if (!startconnection) {
+            int id = view.getId();
+            if (id == R.id.btGetResult) {
+                String okresponses;
+                if (fileExist(connectionDetails.getOkResults())) {
+                    okresponses = readOldResponse(connectionDetails.getOkResults());
+                    if (!okresponses.trim().isEmpty()) {
+                        tvlogResult.setText(okresponses);
+                        return;
+                    }
+                }
+                tvlogResult.setText("OK Result Is Empty");
+            } else if (id == R.id.btClearResult) {
+                deleteTempFile(connectionDetails.getOkResults());
+                Toast.makeText(this, "Ok Results Cleared Successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Unknown id", Toast.LENGTH_SHORT).show();
+            }
+        }else {
+            LogActivity.this.runOnUiThread(new Runnable() {
+                public void run() {
+                    Toast.makeText(LogActivity.this, "Stop Connection First", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
+    public void checkEverything(){
+        //TODO CHECK EVERYTHING HERE
+        LogActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(LogActivity.this, "Stop Everything", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public void stop(View v) {
+        LogActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                tryingToStop = true;
+                checkEverything();
+            }
+        });
+    }
+
     @Override
-    protected void onDestroy() {
-        // Stop the while loop when the activity is destroyed
-        isRunning = false;
-        startconnection = false;
-        createconnection = false;
-        super.onDestroy();
+    protected void onPause() {
+        super.onPause();
     }
 }

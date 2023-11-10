@@ -28,6 +28,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,10 +45,11 @@ public class MainActivity extends AppCompatActivity {
     boolean proxyfilemode = false;
     boolean useProxy = true;
     String mode = "manual";
-    String defaulthost = "uss1-7.ipserver.xyz"; //104.26.15.41:80
+    String defaulthost = "fr1.test3.net"; //104.26.15.41:80  43.154.19.161
     ConnectionSettings connectionSettings = new ConnectionSettings();
     ConnectionDetails connectionDetails = new ConnectionDetails();
     String extension;
+    StringBuilder detailsBefore;
     ActivityResultLauncher<String> launchFileManager = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
         ContentResolver contentResolver = getContentResolver();
         MimeTypeMap mimeTypeMap;
@@ -70,8 +72,9 @@ public class MainActivity extends AppCompatActivity {
                     text.append(line).append("\n");
                 }
                 br.close();
-                writeToFileInternally(connectionDetails.getTempProxyFilename(), text.toString());
-                Toast.makeText(this, "tempProxyFile created successfully", Toast.LENGTH_SHORT).show();
+                if (writeToFileInternally(connectionDetails.getTempProxyFilename(), text.toString())) {
+                    Toast.makeText(this, "tempProxyFile created successfully", Toast.LENGTH_SHORT).show();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Failed to create tempProxyFile", Toast.LENGTH_SHORT).show();
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
             tilproxyfile.setHelperText("File must be in txt format");
         }
     });
-    private int connectionType = 0;
+    private int connectionType;
     private int savedConnectionType, savedPort;
     private String savedHost, savedProxy, savedFilename;
 
@@ -107,6 +110,83 @@ public class MainActivity extends AppCompatActivity {
         tieproxyfile = findViewById(R.id.tieproxyfile);
 
         permissionHandler();
+    }
+
+    @Override
+    protected void onPause() {
+        deleteTempFile(connectionDetails.getDetailsBefore());
+        detailsBefore = new StringBuilder();
+        detailsBefore.append("connectiontype-" + connectionType);
+        detailsBefore.append("Host-" + tiehost.getText().toString());
+        detailsBefore.append("Useproxy-" + useProxy);
+        detailsBefore.append("Usemanualproxy-" + cusemanualproxy.isChecked());
+        detailsBefore.append("Useproxyfile-" + cusemanualproxy.isChecked());
+        detailsBefore.append("Proxy-" + tieproxy.getText().toString());
+        detailsBefore.append("Filename-" + connectionDetails.getTempProxyFilename());
+        writeToFileInternally(connectionDetails.getDetailsBefore(), detailsBefore.toString());
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        readDetailsBefore(connectionDetails.getDetailsBefore());
+        handler();
+    }
+
+    public void readDetailsBefore(String filename) {
+        FileInputStream fileInputStream = null;
+        if (pathFileExist(filename)) {
+            try {
+                fileInputStream = openFileInput(filename);
+                InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String text;
+                while ((text = bufferedReader.readLine()) != null) {
+                    doAsSaid(text.trim());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void doAsSaid(String wish){
+        if (!wish.isEmpty()){
+            String split[] = wish.split("-");
+            String wishKey = split[0];
+            String wishValue = split[1];
+            switch (wishKey){
+                case "connectiontype":
+                    if (wishValue.equals(0) || wishValue.equals(1)) {
+                        modeselection.check(R.id.btManual);
+                    } else if (wishValue.equals(2)) {
+                        modeselection.check(R.id.btAuto);
+                    }
+                    break;
+                case "Host":
+                    tiehost.setText(wishKey);
+                    break;
+                case "Useproxy":
+                    useProxy = wishValue.matches("true");
+                    break;
+                case "Usemanualproxy":
+                    cusemanualproxy.setChecked(wishValue.matches("true"));
+                    break;
+                case "Useproxyfile":
+                    cproxyfilemode.setChecked(wishValue.matches("true"));
+                    break;
+                case "Proxy":
+                    tieproxy.setText(wishKey);
+                    break;
+                case "Filename":
+                    tieproxyfile.setText(wishKey);
+                    break;
+                default:
+                    break;
+            }
+        }
+
     }
 
     public void permissionHandler() {
@@ -159,11 +239,6 @@ public class MainActivity extends AppCompatActivity {
         this.savedFilename = savedFilename;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        handler();
-    }
 
     private void handler() {
 
@@ -280,11 +355,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void manual(View v) {
-        tiehost.setText(null);
         manualmode();
     }
 
     public void manualmode() {
+        tiehost.setText(null);
         mode = "manual";
         cproxyfilemode.setVisibility(View.VISIBLE);
         cusemanualproxy.setVisibility(View.VISIBLE);
@@ -430,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
         if (!(text == null)) {
             boolean canconnect;
             text = text.trim();
-            if (!(text.length() > 15)) {
+            if (!(text.length() > 20)) {
                 if (!text.matches(connectionSettings.getHttpRegex())) {
                     if (!text.matches(connectionSettings.getHostRegex())) {
                         if (text.matches(connectionSettings.getProxyPortRegex())) {
@@ -494,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean pathFileExist(String string) {
         //Returns true if the file to read file from already exists
-        File file = new File(getFilesDir(), connectionDetails.getTempProxyFilename());
+        File file = new File(getFilesDir(), string);
         return file.exists();
     }
 
@@ -523,14 +598,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void writeToFileInternally(String fileName, String text) {
+    public boolean writeToFileInternally(String fileName, String text) {
         FileOutputStream fileOutputStream = null;
         try {
             fileOutputStream = openFileOutput(fileName, MODE_APPEND);
             fileOutputStream.write((text + "\n").getBytes());
-            Toast.makeText(this, "tempProxyFile created successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         } finally {
             if (fileOutputStream != null) {
                 try {
@@ -540,6 +615,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+        return true;
     }
 
     private void openLog() {

@@ -64,14 +64,47 @@
             tools:ignore="SpeakableTextPresentCheck" />
     </ScrollView>
 
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginBottom="10dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btGetResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/getok"
+            android:backgroundTint="@color/blue"
+            android:textColor="@color/white"
+            app:iconTint="@color/white"
+            android:layout_alignParentLeft="true"
+            android:onClick="okresult"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btClearResult"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/clearok"
+            android:backgroundTint="@color/blue"
+            android:textColor="@color/white"
+            app:iconTint="@color/white"
+            android:layout_toEndOf="@id/btGetResult"
+            android:layout_marginStart="5dp"
+            android:onClick="okresult"/>
+
+    </RelativeLayout>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabdisconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_gravity="bottom|end"
-        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp"
         android:layout_marginBottom="8dp"
         android:backgroundTint="@color/orange"
         app:srcCompat="@drawable/ic_disconnect"

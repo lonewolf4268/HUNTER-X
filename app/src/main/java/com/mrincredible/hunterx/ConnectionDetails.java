@@ -4,10 +4,10 @@ public class ConnectionDetails {
     private String host;
     private String proxy;
     private int port;
-    private String resultfile = "result_1.txt";
-    private String tmpfile = "proxygenerator.txt";
+    private String okResults = "200 OK results";
     private String tempResult = "tempResult.txt";
     private String tempProxyFilename = "tempProxyFile.txt";
+    private String detailsBefore = "detailsBefore.txt";
     private boolean startConnection;
     public String getHost() {
         return host;
@@ -35,16 +35,16 @@ public class ConnectionDetails {
         this.port = port;
     }
 
-    public String getTmpfile() {
-        return tmpfile;
-    }
-
     public String getTempResult() {
         return tempResult;
     }
 
-    public String getResultfile() {
-        return resultfile;
+    public String getDetailsBefore() {
+        return detailsBefore;
+    }
+
+    public String getOkResults() {
+        return okResults;
     }
 
     public void splitProxyPort(String pp) {
