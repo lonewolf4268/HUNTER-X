@@ -477,6 +477,7 @@ public class LogActivity extends AppCompatActivity {
         LogActivity.this.runOnUiThread(new Runnable() {
             public void run() {
                 Toast.makeText(LogActivity.this, "Stop Everything", Toast.LENGTH_SHORT).show();
+                finish();
             }
         });
     }
