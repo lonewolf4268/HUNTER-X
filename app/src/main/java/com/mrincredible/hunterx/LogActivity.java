@@ -35,8 +35,6 @@ import java.util.Random;
 public class LogActivity extends AppCompatActivity {
     private final ConnectionDetails connectionDetails = new ConnectionDetails();
     private final ConnectionSettings connectionSettings = new ConnectionSettings();
-    private final boolean begin = false;
-    private final boolean couldnt_connect = false;
     Proxy proxxy;
     Intent intent;
     StringBuilder response = new StringBuilder();
