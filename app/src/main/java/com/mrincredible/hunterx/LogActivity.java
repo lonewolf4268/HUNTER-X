@@ -294,6 +294,7 @@ public class LogActivity extends AppCompatActivity {
 
     private void startAsyncFileModeLoop(String filename) {
 
+        Toast.makeText(this, "Please do not interrupt process", Toast.LENGTH_SHORT).show();
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
         wakeLock.acquire();
@@ -431,6 +432,7 @@ public class LogActivity extends AppCompatActivity {
     }
 
     private void startAsyncWhileLoop() {
+        Toast.makeText(this, "Please do not interrupt process", Toast.LENGTH_SHORT).show();
 
         powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
