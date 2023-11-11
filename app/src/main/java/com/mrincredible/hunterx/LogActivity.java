@@ -304,7 +304,6 @@ public class LogActivity extends AppCompatActivity {
             public void run() {
                 response.append("Host: " + host + "\n");
 
-                int count = 0;
                 try (BufferedReader bufferedReader = new BufferedReader(new FileReader(getFilesDir() + "/" + filename))) {
                     String line;
                     String proxyANDport;
@@ -407,7 +406,6 @@ public class LogActivity extends AppCompatActivity {
                                 }
                             }
                         }
-                        count++;
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -418,9 +416,7 @@ public class LogActivity extends AppCompatActivity {
                     });
                 }
                 wakeLock.release();
-                if (count == 0){
-                    tvlogResult.setText("No proxy found in File");
-                }
+
                 LogActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                         Toast.makeText(LogActivity.this, "Connection Done", Toast.LENGTH_SHORT).show();
