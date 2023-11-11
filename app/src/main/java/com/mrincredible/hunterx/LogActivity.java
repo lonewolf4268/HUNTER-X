@@ -557,15 +557,20 @@ public class LogActivity extends AppCompatActivity {
     public void writeToFileInternally(String fileName, String text) {
         LogActivity.this.runOnUiThread(new Runnable() {
             public void run() {
-                File file = new File(getFilesDir() + "/" + filename);
-                Path path = Paths.get(getFilesDir().getPath());
+                FileOutputStream fileOutputStream = null;
                 try {
-                    if (!fileExist(fileName)){
-                        file.createNewFile();
-                    }
-                    Files.write(path, text.getBytes(), StandardOpenOption.APPEND);
-                }catch (IOException e){
+                    fileOutputStream = openFileOutput(fileName, MODE_APPEND);
+                    fileOutputStream.write((text + "\n").getBytes());
+                } catch (Exception e) {
                     e.printStackTrace();
+                } finally {
+                    if (fileOutputStream != null) {
+                        try {
+                            fileOutputStream.close();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             }
         });
