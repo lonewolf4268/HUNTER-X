@@ -179,6 +179,7 @@
             app:errorIconTint="@color/orange"
             app:errorTextColor="@color/orange"
             app:helperTextEnabled="true"
+            app:helperText="@string/fileformat"
             app:helperTextTextColor="@color/blue"
             app:prefixText="@string/prifixfile"
             app:suffixTextColor="@color/blue">
@@ -201,6 +202,7 @@
         android:layout_below="@id/hostANDproxy"
         android:layout_marginTop="30dp"
         android:text="@string/proxyfilemode"
+        android:checked="false"
         android:textColor="@color/blue" />
 
     <com.google.android.material.chip.Chip

@@ -13,6 +13,7 @@
     <string name="about">About</string>
     <string name="getok">Get Ok Results</string>
     <string name="clearok">Clear Ok Results</string>
+    <string name="fileformat">File must be in .txt format</string>
     <string name="thankyou">Thanks To\n\t\tThe Almighty Lord\n\t\tLonewolf\n\t\tReversalX and All Admins\n\t\tAll Play All and All Admins</string>
     <string name="features">Features\n\t\tCheck Site Availability\n\t\tCheck Site Availability Through Proxy\n\t\tAuto Generate Proxy\n\t\tProxy Scrapping</string>
     <string name="madeby">Made with love by Mr. Incredible</string>

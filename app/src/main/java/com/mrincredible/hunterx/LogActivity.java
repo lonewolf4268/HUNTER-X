@@ -143,7 +143,7 @@ public class LogActivity extends AppCompatActivity {
                 return;
             case 1:
                 //manual proxyfile
-                readFile(getFilesDir(), filename);
+                readFile(filename);
                 return;
             case 2:
                 //austomode
@@ -154,25 +154,42 @@ public class LogActivity extends AppCompatActivity {
         }
     }
 
-    private void readFile(File directory, String fileName) {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(directory + "/" + fileName))) {
-            String line;
-            String proxyANDport;
-            while (((line = bufferedReader.readLine()) != null) && (startconnection)) {
-                createconnection = true;
-                proxyANDport = line.trim();
-                if (connectionSettings.checkProxyInFile(proxyANDport)) {
-                    if (proxyANDport.contains(":")) {
-                        if (!proxyANDport.endsWith(":")) {
-                            String[] split = proxyANDport.split(":");
-                            createConnection(split[0], Integer.parseInt(split[1]));
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            Toast.makeText(LogActivity.this, "Unable To Read File Content", Toast.LENGTH_SHORT).show();
-        }
+    private void readFile(String fileName) {
+        looper = Looper.myLooper();
+        // Initialize the handler on the main (UI) thread
+        handler = new Handler(looper);
+        // Start the asynchronous while loop
+        startconnection = true;
+        startAsyncFileModeLoop(fileName);
+
+//        int count = 0;
+//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(getFilesDir() + "/" + fileName))) {
+//            String line;
+//            String proxyANDport;
+//            powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
+//            wakeLock.acquire();
+//            while (((line = bufferedReader.readLine()) != null) && (startconnection)) {
+//                createconnection = true;
+//                proxyANDport = line.trim();
+//                if (connectionSettings.checkProxyInFile(proxyANDport)) {
+//                    if (proxyANDport.contains(":")) {
+//                        if (!proxyANDport.endsWith(":")) {
+//                            String[] split = proxyANDport.split(":");
+//                            createConnection(split[0], Integer.parseInt(split[1]));
+//                        }
+//                    }
+//                }
+//                count++;
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            Toast.makeText(LogActivity.this, "Unable To Read File Content", Toast.LENGTH_SHORT).show();
+//        }
+//        wakeLock.release();
+//        if (count == 0){
+//            tvlogResult.setText("No proxy found in File");
+//        }
     }
 
     private String proxyGenerator() {
@@ -253,7 +270,7 @@ public class LogActivity extends AppCompatActivity {
             writeToFileInternally(tempResult, response.toString());
             writeToFileInternally(connectionDetails.getOkResults(), responseToWrite.toString());
 
-            if (endCount >= 10) {
+            if (endCount >= 6) {
                 clearit();
                 response = new StringBuilder();
                 endCount = 0;
@@ -273,6 +290,144 @@ public class LogActivity extends AppCompatActivity {
 
     public boolean isRunning() {
         return running;
+    }
+
+    private void startAsyncFileModeLoop(String filename) {
+
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
+        wakeLock.acquire();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                response.append("Host: " + host + "\n");
+
+                int count = 0;
+                try (BufferedReader bufferedReader = new BufferedReader(new FileReader(getFilesDir() + "/" + filename))) {
+                    String line;
+                    String proxyANDport;
+                    powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "hunterx:autogen");
+                    wakeLock.acquire();
+                    while (((line = bufferedReader.readLine()) != null) && (startconnection)) {
+                        createconnection = true;
+                        proxyANDport = line.trim();
+                        if (connectionSettings.checkProxyInFile(proxyANDport)) {
+                            if (proxyANDport.contains(":")) {
+                                if (!proxyANDport.endsWith(":")) {
+                                    String[] split = proxyANDport.split(":");
+
+                                    try {
+                                        url = new URL("http://" + host);
+                                        proxxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(split[0], Integer.parseInt(split[1])));
+                                        httpURLConnection = (HttpURLConnection) url.openConnection(proxxy);
+                                        httpURLConnection.setRequestMethod("GET");
+                                        httpURLConnection.setInstanceFollowRedirects(true);
+                                        httpURLConnection.addRequestProperty("Accept-encoding", "gzip");
+                                        httpURLConnection.addRequestProperty("Connection", "close");
+                                        httpURLConnection.setConnectTimeout(5000);
+                                        httpURLConnection.setReadTimeout(5000);
+                                        httpURLConnection.connect();
+
+                                        response.append("Host: " + host + "\n");
+                                        response.append("Proxy: " + split[0] + "\n" + "Port: " + split[1] + "\n");
+
+                                        if ((httpURLConnection.getResponseCode() == 101) || (httpURLConnection.getResponseCode() == 200)) {
+                                            responseToWrite.append("Proxy: " + split[0] + ":" + split[1] + " connected to " + host + " successfully");
+                                            httpURLConnection.getHeaderFields().forEach((key, value) -> {
+                                                if (key == null) {
+                                                    key = "Response";
+                                                }
+                                                response.append(key + ":" + value + "\n");
+                                                responseToWrite.append(key + ":" + value + "\n");
+                                            });
+
+                                            response.append("\n----------------END--------------\n\n");
+                                            responseToWrite.append("\n----------------END--------------\n\n");
+                                            //TODO ADD THE OK RESULT TO A FILE AND SHOW USERS THE LOCATION
+                                        } else {
+                                            httpURLConnection.getHeaderFields().forEach((key, value) -> {
+                                                if (key == null) {
+                                                    key = "Response";
+                                                }
+                                                response.append(key + ":" + value + "\n");
+                                            });
+                                            response.append("\n----------------END--------------\n\n");
+                                        }
+
+//                System.out.println(response.toString());
+                                    } catch (MalformedURLException e) {
+                                        response.append("No Internet connection");
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        response.append(e + "\n----------------END--------------\n\n");
+                                    } finally {
+                                        httpURLConnection.disconnect();
+                                    }
+
+
+                                    // Update UI on the main thread using the handler
+                                    handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // Update UI components or perform other UI-related actions
+//                            readFile(connectionDetails.getTempDir() + "/" + connectionDetails.getTmpfile());
+                                            endCount++;
+                                            tvlogResult.setText(response.toString());
+                                            writeToFileInternally(tempResult, response.toString());
+                                            writeToFileInternally(connectionDetails.getOkResults(), responseToWrite.toString());
+
+                                            if (endCount >= 6) {
+                                                clearit();
+                                                response = new StringBuilder();
+                                                endCount = 0;
+                                            }
+
+                                            if (tryingToStop){
+                                                startconnection = false;
+                                                looper.quit();
+                                            }
+                                        }
+                                    });
+
+                                    // Delay the loop for a specific interval (e.g., 1 second)
+                                    try {
+                                        Thread.sleep(3000); // Adjust the delay interval as needed
+                                    } catch (InterruptedException e) {
+                                        startconnection = false;
+                                        e.printStackTrace();
+                                        break;
+                                    }
+
+
+                                }
+
+                                }
+                            }
+                        }
+                        count++;
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    LogActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(LogActivity.this, "Unable To Read File Content", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                wakeLock.release();
+                if (count == 0){
+                    tvlogResult.setText("No proxy found in File");
+                }
+                LogActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(LogActivity.this, "Unable To Read File Content", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+        }).start();
     }
 
     private void startAsyncWhileLoop() {
@@ -351,7 +506,7 @@ public class LogActivity extends AppCompatActivity {
                             writeToFileInternally(tempResult, response.toString());
                             writeToFileInternally(connectionDetails.getOkResults(), responseToWrite.toString());
 
-                            if (endCount >= 10) {
+                            if (endCount >= 6) {
                                 clearit();
                                 response = new StringBuilder();
                                 endCount = 0;
@@ -401,19 +556,21 @@ public class LogActivity extends AppCompatActivity {
 //        return true;
 //    }
 
-    public boolean writeToFileInternally(String fileName, String text) {
-        File file = new File(getFilesDir() + "/" + filename);
-        Path path = Paths.get(getFilesDir().getPath());
-        try {
-            if (!fileExist(fileName)){
-                file.createNewFile();
+    public void writeToFileInternally(String fileName, String text) {
+        LogActivity.this.runOnUiThread(new Runnable() {
+            public void run() {
+                File file = new File(getFilesDir() + "/" + filename);
+                Path path = Paths.get(getFilesDir().getPath());
+                try {
+                    if (!fileExist(fileName)){
+                        file.createNewFile();
+                    }
+                    Files.write(path, text.getBytes(), StandardOpenOption.APPEND);
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
             }
-
-            Files.write(path, text.getBytes(), StandardOpenOption.APPEND);
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-        return true;
+        });
     }
 
     public String readOldResponse(String filename) {

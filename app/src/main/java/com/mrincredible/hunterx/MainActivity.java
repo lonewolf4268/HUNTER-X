@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
             extension = "null";
         }
 
-        if (extension.equals(".txt")) {
+        if (extension.equals("txt")) {
             deleteTempFile(connectionDetails.getTempProxyFilename());
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
@@ -117,12 +117,12 @@ public class MainActivity extends AppCompatActivity {
         deleteTempFile(connectionDetails.getDetailsBefore());
         detailsBefore = new StringBuilder();
         detailsBefore.append("connectiontype-" + connectionType);
-        detailsBefore.append("Host-" + tiehost.getText().toString());
-        detailsBefore.append("Useproxy-" + useProxy);
-        detailsBefore.append("Usemanualproxy-" + cusemanualproxy.isChecked());
-        detailsBefore.append("Useproxyfile-" + cusemanualproxy.isChecked());
-        detailsBefore.append("Proxy-" + tieproxy.getText().toString());
-        detailsBefore.append("Filename-" + connectionDetails.getTempProxyFilename());
+        detailsBefore.append("\nHost-" + tiehost.getText().toString());
+        detailsBefore.append("\nUseproxy-" + useProxy);
+        detailsBefore.append("\nProxy-" + tieproxy.getText().toString());
+        detailsBefore.append("\nFilename-" + connectionDetails.getTempProxyFilename());
+        detailsBefore.append("\nUsemanualproxy-" + cusemanualproxy.isChecked());
+        detailsBefore.append("\nUseproxyfile-" + cproxyfilemode.isChecked());
         writeToFileInternally(connectionDetails.getDetailsBefore(), detailsBefore.toString());
         super.onPause();
     }
@@ -165,22 +165,22 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
                 case "Host":
-                    tiehost.setText(wishKey);
+                    tiehost.setText(wishValue);
                     break;
                 case "Useproxy":
                     useProxy = wishValue.matches("true");
+                    break;
+                case "Proxy":
+                    tieproxy.setText(wishValue);
+                    break;
+                case "Filename":
+                    tieproxyfile.setText(wishValue);
                     break;
                 case "Usemanualproxy":
                     cusemanualproxy.setChecked(wishValue.matches("true"));
                     break;
                 case "Useproxyfile":
                     cproxyfilemode.setChecked(wishValue.matches("true"));
-                    break;
-                case "Proxy":
-                    tieproxy.setText(wishKey);
-                    break;
-                case "Filename":
-                    tieproxyfile.setText(wishKey);
                     break;
                 default:
                     break;
@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
         tilproxyfile.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                launchFileManager.launch("*/*");
+                launchFileManager.launch("text/plain");
             }
         });
     }
