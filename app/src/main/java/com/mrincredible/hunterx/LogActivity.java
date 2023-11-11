@@ -422,7 +422,7 @@ public class LogActivity extends AppCompatActivity {
                 }
                 LogActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
-                        Toast.makeText(LogActivity.this, "Unable To Read File Content", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LogActivity.this, "Connection Done", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
