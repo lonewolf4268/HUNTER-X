@@ -636,7 +636,6 @@ public class LogActivity extends AppCompatActivity {
         //TODO CHECK EVERYTHING HERE
         LogActivity.this.runOnUiThread(new Runnable() {
             public void run() {
-                Toast.makeText(LogActivity.this, "Stop Everything", Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
@@ -646,6 +645,7 @@ public class LogActivity extends AppCompatActivity {
         LogActivity.this.runOnUiThread(new Runnable() {
             public void run() {
                 tryingToStop = true;
+                Toast.makeText(LogActivity.this, "Connection will stop momentarily", Toast.LENGTH_SHORT).show();
                 checkEverything();
             }
         });
